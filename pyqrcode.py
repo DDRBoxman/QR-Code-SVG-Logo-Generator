@@ -220,8 +220,8 @@ class QRCode(object):
 
 			return rectangle
 		 
-		block_in_pixels = 10 #pixels per box
-		border_in_blocks = 4 #boxes as border
+		#block_in_pixels = 10 #pixels per box
+		#border_in_blocks = 4 #boxes as border
 		pixelsize = (self.getModuleCount() + border_in_blocks + border_in_blocks) * block_in_pixels
 
 		im = Image.new(mode, (pixelsize, pixelsize), bg)
