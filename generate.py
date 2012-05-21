@@ -60,8 +60,16 @@ for xPos in range(0,im.size[0]):
 
 logo = getSVGFileContent(logoPath)
 
-width = float(str(logo.get("width")).replace("px", ""))
-height = float(str(logo.get("height")).replace("px", ""))
+test = str(logo.get("viewBox"))
+Array = []
+
+if (test != "None"):
+    Array = test.split(" ")
+    width = float(Array[2])
+    height = float(Array[3])
+else :
+    width = float(str(logo.get("width")).replace("px", ""))
+    height = float(str(logo.get("height")).replace("px", ""))
 
 dim = height
 if (width > dim):
