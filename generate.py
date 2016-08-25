@@ -4,6 +4,8 @@ import pyqrcode
 from xml.etree import ElementTree as et
 import math
 import sys
+import logging
+logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 
 block_size = 10
 circle_radius = block_size * 4
@@ -12,25 +14,30 @@ def distance(p0, p1):
     return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
 def generateQRImageForUrl(url):
-	qr_image = pyqrcode.MakeQRImage(url, errorCorrectLevel = pyqrcode.QRErrorCorrectLevel.H, block_in_pixels = 1, border_in_blocks=0)
-	return qr_image
+    qr_image = pyqrcode.MakeQRImage(url, errorCorrectLevel = pyqrcode.QRErrorCorrectLevel.H, block_in_pixels = 1, border_in_blocks=0)
+    return qr_image
 
 def getSVGFileContent(filename):
-	document = et.parse(filename)
-	root = document.getroot()
-	for elem in root.iter("{http://www.w3.org/2000/svg}svg"):
-		return elem
+    '''
+    root may be the svg element itself, so build a fake root
+    '''
+    fakeroot = et.Element('root')
+    document = et.parse(filename)
+    root = document.getroot()
+    logging.debug("root: %s", root)
+    fakeroot.append(root)
+    return fakeroot.find('.//svg')
 
 def touchesBounds(center, x, y, radius, block_size):
-	scaled_center = center / block_size
-	dis = distance((scaled_center , scaled_center), (x, y))
-	rad = radius / block_size
-	return dis <= rad + 1	
+    scaled_center = center / block_size
+    dis = distance((scaled_center , scaled_center), (x, y))
+    rad = radius / block_size
+    return dis <= rad + 1	
 
 if len(sys.argv) < 4:
-	print "Incorrect args, try:"
-	print './generate.py ./octocat.svg "http://github.com" ./out.svg'
-	sys.exit(0)
+    print "Incorrect args, try:"
+    print './generate.py ./octocat.svg "http://github.com" ./out.svg'
+    sys.exit(0)
 
 logoPath = sys.argv[1]
 url = sys.argv[2]
@@ -48,15 +55,15 @@ pix = im.load()
 center = im.size[0] * block_size / 2
 
 for xPos in range(0,im.size[0]):
-	for yPos in range(0, im.size[1]):
+    for yPos in range(0, im.size[1]):
 
-		color = pix[xPos, yPos]
-		if color == (0,0,0,255):
+        color = pix[xPos, yPos]
+        if color == (0,0,0,255):
 
-			withinBounds = not touchesBounds(center, xPos, yPos, circle_radius, block_size)
+            withinBounds = not touchesBounds(center, xPos, yPos, circle_radius, block_size)
 
-			if (withinBounds):
-				et.SubElement(doc, 'rect', x=str(xPos*block_size), y=str(yPos*block_size), width='10', height='10', fill='black')
+            if (withinBounds):
+                et.SubElement(doc, 'rect', x=str(xPos*block_size), y=str(yPos*block_size), width='10', height='10', fill='black')
 
 logo = getSVGFileContent(logoPath)
 
@@ -73,7 +80,7 @@ else :
 
 dim = height
 if (width > dim):
-	dim = width
+    dim = width
 scale = circle_radius * 2.0 / width
 
 scale_str = "scale(" + str(scale) + ")"
@@ -86,7 +93,7 @@ translate = "translate(" + str(xTrans) + " " + str(yTrans) + ")"
 logo_scale_container = et.SubElement(doc, 'g', transform=translate + " " + scale_str)
 
 for element in logo.getchildren():
-	logo_scale_container.append(element)
+    logo_scale_container.append(element)
 
 
 # ElementTree 1.2 doesn't write the SVG file header errata, so do that manually
