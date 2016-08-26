@@ -19,7 +19,7 @@ def generateQRImageForUrl(url):
 
 def getSVGFileContent(filename):
     '''
-    root may be the svg element itself, so build a fake root
+    root may be the svg element itself, so search from tree
 
     solution for multiple (or no) namespaces from
     http://stackoverflow.com/a/14552559/493161
