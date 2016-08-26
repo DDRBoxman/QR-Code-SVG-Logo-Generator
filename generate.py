@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 import pyqrcode
-from xml.etree import ElementTree as et
+from lxml import etree
 import math
 import sys
 import logging
@@ -20,15 +20,14 @@ def generateQRImageForUrl(url):
 def getSVGFileContent(filename):
     '''
     root may be the svg element itself, so build a fake root
+
+    solution for multiple (or no) namespaces from
+    http://stackoverflow.com/a/14552559/493161
     '''
-    fakeroot = et.Element('root')
-    document = et.parse(filename)
-    root = document.getroot()
-    logging.debug("root: %s", root)
-    fakeroot.append(root)
-    svg = fakeroot.find('.//svg')
-    if svg is None:
-        svg = fakeroot.find('.//{http://www.w3.org/2000/svg}svg')
+    document = etree.parse(filename)
+    logging.debug('document: %s', document)
+    svg = document.xpath('//*[local-name()="svg"]')[0]
+    logging.debug('svg: %s', svg)
     return svg
 
 def touchesBounds(center, x, y, radius, block_size):
@@ -51,7 +50,7 @@ im = generateQRImageForUrl(url);
 imageSize = str(im.size[0] * block_size)
 
 # create an SVG XML element (see the SVG specification for attribute details)
-doc = et.Element('svg', width=imageSize, height=imageSize, version='1.1', xmlns='http://www.w3.org/2000/svg')
+doc = etree.Element('svg', width=imageSize, height=imageSize, version='1.1', xmlns='http://www.w3.org/2000/svg')
 
 pix = im.load()
 
@@ -66,7 +65,7 @@ for xPos in range(0,im.size[0]):
             withinBounds = not touchesBounds(center, xPos, yPos, circle_radius, block_size)
 
             if (withinBounds):
-                et.SubElement(doc, 'rect', x=str(xPos*block_size), y=str(yPos*block_size), width='10', height='10', fill='black')
+                etree.SubElement(doc, 'rect', x=str(xPos*block_size), y=str(yPos*block_size), width='10', height='10', fill='black')
 
 logo = getSVGFileContent(logoPath)
 
@@ -93,7 +92,7 @@ yTrans = ((im.size[1] * block_size) - (height * scale)) / 2.0
 
 translate = "translate(" + str(xTrans) + " " + str(yTrans) + ")"
 
-logo_scale_container = et.SubElement(doc, 'g', transform=translate + " " + scale_str)
+logo_scale_container = etree.SubElement(doc, 'g', transform=translate + " " + scale_str)
 
 for element in logo.getchildren():
     logo_scale_container.append(element)
@@ -104,5 +103,5 @@ f = open(outputname, 'w')
 f.write('<?xml version=\"1.0\" standalone=\"no\"?>\n')
 f.write('<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n')
 f.write('\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n')
-f.write(et.tostring(doc))
+f.write(etree.tostring(doc))
 f.close()
