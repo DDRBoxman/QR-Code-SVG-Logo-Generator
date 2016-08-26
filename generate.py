@@ -26,7 +26,8 @@ def getSVGFileContent(filename):
     root = document.getroot()
     logging.debug("root: %s", root)
     fakeroot.append(root)
-    return fakeroot.find('.//svg')
+    return (fakeroot.find('.//svg') or
+            fakeroot.find('.//{http://www.w3.org/2000/svg}svg'))
 
 def touchesBounds(center, x, y, radius, block_size):
     scaled_center = center / block_size
